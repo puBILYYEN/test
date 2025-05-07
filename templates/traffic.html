@@ -1,0 +1,18 @@
+<form method="post">
+    請輸入欲查詢的路名關鍵字：
+    <input type="text" name="Road"/>
+    <button type="submit">查詢114年1月台中10大易肇事路口</button>
+</form>
+
+{% if result %}
+    查詢結果：
+    <ul>
+        {% for item in result %}
+            <li>
+                <strong>路口名稱：</strong> {{ item["路口名稱"] }}<br>
+                <strong>總件數：</strong> {{ item["總件數"] }}<br>
+                <strong>主要肇因：</strong> {{ item["主要肇因"] }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
