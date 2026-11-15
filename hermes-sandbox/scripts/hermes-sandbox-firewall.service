@@ -1,0 +1,16 @@
+# 讓防火牆規則在開機、或 Docker 重新啟動後自動套用
+# 安裝方式請看 README.md「第 5 步」
+[Unit]
+Description=Hermes sandbox egress firewall (block 172.30.0.0/24 from leaving)
+After=docker.service
+Requires=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/hermes-sandbox-firewall.sh apply
+ExecStop=/usr/local/sbin/hermes-sandbox-firewall.sh remove
+
+[Install]
+WantedBy=multi-user.target docker.service

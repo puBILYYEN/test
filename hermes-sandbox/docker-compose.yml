@@ -1,0 +1,95 @@
+# =============================================================================
+# Hermes Agent + 本地模型：斷網 sandbox（Linux / Ubuntu 版）
+#
+# 設計原則：
+#   1. 所有元件只接 ai-internal 網路（internal: true），
+#      Docker 不會替這個網路建立 NAT / MASQUERADE，所以沒有對外出口。
+#   2. 不使用 network_mode: host（Hermes 官方 compose 預設用 host 模式，
+#      那會讓容器直接用主機的網路，等於沒有隔離）。
+#   3. 不掛載 /var/run/docker.sock、不掛載家目錄。
+#   4. 主機防火牆（scripts/firewall.sh）再擋一次，當作雙保險。
+#
+# 用法請看 README.md
+# =============================================================================
+
+name: hermes-sandbox
+
+services:
+  # ---------------------------------------------------------------------------
+  # 推論伺服器：Ollama（負責跑 ORNITH 1.5）
+  # ---------------------------------------------------------------------------
+  llm:
+    image: ollama/ollama:latest
+    container_name: hermes-llm
+    restart: unless-stopped
+    networks:
+      ai-internal:
+        ipv4_address: 172.30.0.10
+    # 注意：這裡「沒有」 ports:，主機和外部都連不到它，只有 hermes 連得到
+    volumes:
+      - ollama-data:/root/.ollama      # 模型存放位置（Docker 管理的 volume）
+      - ./models-gguf:/gguf:ro         # 如果你的模型是 .gguf 檔，放這裡（唯讀）
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=24h          # 模型常駐記憶體，避免每次重新載入
+      # Ollama 一啟動就會主動連 ollama.com（雲端模型清單、推薦模型）。
+      # 網路已經擋住了，這行是從源頭關掉雲端功能。
+      - OLLAMA_NO_CLOUD=1
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    # --- 有 NVIDIA 顯示卡的話，裝好 nvidia-container-toolkit 後把下面取消註解 ---
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # ---------------------------------------------------------------------------
+  # AI 代理人：Hermes Agent（風險最高，包最緊）
+  # 這個服務放在 profile "cli"，不會被 `docker compose up -d` 自動啟動，
+  # 要用時執行：docker compose run --rm hermes
+  # ---------------------------------------------------------------------------
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    profiles: ["cli"]
+    networks:
+      ai-internal: {}
+    depends_on:
+      - llm
+    volumes:
+      # 用「全新的」資料夾，不要用主機的 ~/.hermes
+      # （主機的 ~/.hermes/.env 可能有雲端 API key 或 fallback 設定）
+      - ./hermes-data:/opt/data
+      # 要給 Hermes 處理的檔案放這裡
+      - ./workspace:/workspace
+    environment:
+      - HERMES_UID=${HERMES_UID:-1000}
+      - HERMES_GID=${HERMES_GID:-1000}
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+    # 官方映像檔用 s6-overlay 當 PID 1：啟動時需要 root 調整檔案擁有者，
+    # 再降權成 hermes 使用者執行。所以這裡只留下它需要的最少權限。
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID, KILL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: 6g
+    stdin_open: true
+    tty: true
+
+networks:
+  ai-internal:
+    internal: true            # 關鍵：沒有 NAT、沒有預設閘道，連不到外網
+    enable_ipv6: false        # IPv6 不走 NAT，是另一條出口，關掉
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24   # 固定網段，scripts/firewall.sh 用它來擋
+
+volumes:
+  ollama-data:
+    name: hermes-ollama-data

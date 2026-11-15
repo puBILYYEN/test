@@ -1,0 +1,11 @@
+# 把這個檔案複製成 Modelfile（同一個資料夾），並把檔名改成你的 .gguf 檔名
+#   cp Modelfile.example Modelfile
+#
+# 然後執行（在 hermes-sandbox 資料夾）：
+#   docker compose exec llm ollama create ornith -f /gguf/Modelfile
+
+FROM ./ORNITH-1.5.gguf
+
+# Hermes 需要至少 64K 的 context，Ollama 預設只有 2048，太小會讓工具呼叫出問題
+# 如果記憶體（VRAM）不夠，可以先試 32768，但效果可能會變差
+PARAMETER num_ctx 65536

@@ -1,0 +1,9 @@
+# 這些是你的資料和模型，不要推到 GitHub
+.env
+hermes-data/*
+!hermes-data/.gitkeep
+workspace/*
+!workspace/.gitkeep
+models-gguf/*
+!models-gguf/Modelfile.example
+!models-gguf/.gitkeep
