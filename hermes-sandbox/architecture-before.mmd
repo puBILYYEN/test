@@ -15,9 +15,10 @@ flowchart LR
 
         subgraph models["模型"]
             direction TB
-            ollama["Ollama"]
+            ollama["Ollama<br/>127.0.0.1:11434"]
             poly["PolyStrata<br/>127.0.0.1:8080"]
-            ornith[("ORNITH 1.5<br/>35B")]
+            ornith[("ORNITH 1.5 35B<br/>主力")]
+            gemma[("Gemma 4<br/>圖像辨識")]
             omni["OmniRoute<br/>auto/best-free"]
             other["其他模型"]
         end
@@ -38,7 +39,8 @@ flowchart LR
     ccs --> omni
     ccs --> other
 
-    ollama -->|"跑"| ornith
+    ollama -->|"跑"| gemma
+    gemma -->|"辨識結果交給"| ornith
     poly -->|"跑"| ornith
 
     ollama -.->|"Ollama 會自動連"| ollamacom
