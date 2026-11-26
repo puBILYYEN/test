@@ -119,7 +119,6 @@ CC Switch 預設會改主機上的 `~/.hermes/config.yaml`，但 sandbox 裡的 
 要注意的是：
 - 在 sandbox 裡，**只有本地模型（`http://llm:11434/v1`）連得到**。切換到雲端供應商（Kimi、SiliconFlow 等）會連線失敗，這代表 sandbox 有效，不是 CC Switch 壞了。
 - CC Switch 的 MCP / Skills 同步到 Hermes 時，也會寫進這個 `config.yaml`。需要網路的 MCP 在 sandbox 裡一樣連不出去。
-- CC Switch 切換 **Claude Code** 的部分不受影響。Claude Code 在 sandbox 外面，照常使用。
 
 ## 第 5 步：裝防火牆（第 3 級，必做）
 

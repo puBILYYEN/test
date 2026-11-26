@@ -12,7 +12,7 @@ flowchart LR
 
     subgraph host["🖥️ Ubuntu 主機（主機本身有網路）"]
         direction TB
-        ccs["🎚️ CC Switch（你的開關）<br/>切換 Hermes / Claude Code 的供應商<br/>Hermes 設定目錄 → hermes-sandbox/hermes-data"]
+        ccs["🎚️ CC Switch（你的開關）<br/>切換 Hermes 的供應商<br/>Hermes 設定目錄 → hermes-sandbox/hermes-data"]
         ide["Antigravity IDE + Claude Code<br/>在 sandbox 外，權限跟你一樣<br/>sudo / 刪檔需要你核准"]
         fw{{"第 3 級：主機防火牆<br/>DOCKER-USER 擋往外轉送<br/>INPUT 擋連主機（已實測）"}}
         omni["OmniRoute（AI 路由閘道）<br/>auto/best-free<br/>⚠️ 還沒放進 sandbox"]
@@ -42,7 +42,6 @@ flowchart LR
     user --> ide
     user --> ccs
     ccs -->|"寫入 config.yaml（切換 Hermes 供應商）"| data
-    ccs -->|"切換 Claude Code 供應商"| ide
     user -->|"docker compose run --rm hermes"| hermes
     ide -.->|"管理"| fw
     fw -.-|"保護"| sbx
