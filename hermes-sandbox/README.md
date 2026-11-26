@@ -108,6 +108,19 @@ docker compose run --rm hermes config set security.allow_lazy_installs false
 - `allow_lazy_installs false`：不讓 Hermes 自己去網路下載套件。
 - **不要**設定 `fallback_providers`（本地模型失敗時改用雲端），那就是把資料送出去。
 
+### 用 CC Switch 切換 sandbox 裡的 Hermes
+
+CC Switch 預設會改主機上的 `~/.hermes/config.yaml`，但 sandbox 裡的 Hermes 讀的是 `hermes-sandbox/hermes-data/config.yaml`。所以要讓 CC Switch 改對地方：
+
+1. 打開 CC Switch → **設定（Settings）** → **App 設定** → **Hermes** 的「設定目錄（Config directory）」
+2. 填入 `hermes-data` 資料夾的**完整路徑**，例如 `/home/你的帳號/test/hermes-sandbox/hermes-data`
+3. 之後在 CC Switch 按「Enable」切換，下次執行 `docker compose run --rm hermes` 就會生效
+
+要注意的是：
+- 在 sandbox 裡，**只有本地模型（`http://llm:11434/v1`）連得到**。切換到雲端供應商（Kimi、SiliconFlow 等）會連線失敗，這代表 sandbox 有效，不是 CC Switch 壞了。
+- CC Switch 的 MCP / Skills 同步到 Hermes 時，也會寫進這個 `config.yaml`。需要網路的 MCP 在 sandbox 裡一樣連不出去。
+- CC Switch 切換 **Claude Code** 的部分不受影響。Claude Code 在 sandbox 外面，照常使用。
+
 ## 第 5 步：裝防火牆（第 3 級，必做）
 
 ```bash
