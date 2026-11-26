@@ -3,22 +3,39 @@ config:
   layout: elk
 ---
 %% 加入沙盒之前的 AI 系統架構（Ubuntu）
-%% 你 → Hermes → CC Switch → 各個模型
-%% 右邊「模型」裡面的清單是我推測的，待你確認
+%% 實線 = 已確認｜虛線 = 待你確認
 flowchart LR
     user(["👤 你"])
-    hermes["🤖 Hermes Agent"]
-    ccs["🎚️ CC Switch<br/>（開關）"]
 
-    subgraph models["模型（待確認）"]
+    subgraph host["🖥️ Ubuntu 主機"]
+        direction LR
+        hermes["🤖 Hermes Agent"]
+        ccs["🎚️ CC Switch<br/>（開關）"]
+        ide["Antigravity IDE<br/>+ Claude Code"]
+
+        subgraph models["模型"]
+            direction TB
+            ornith["ORNITH 1.5<br/>（Ollama？）"]
+            omni["OmniRoute<br/>auto/best-free"]
+            other["其他模型"]
+        end
+    end
+
+    subgraph internet["🌐 網際網路"]
         direction TB
-        ornith["ORNITH 1.5<br/>（Ollama）"]
-        omni["OmniRoute<br/>auto/best-free"]
-        other["其他模型"]
+        ollamacom["ollama.com"]
+        cloud["免費雲端模型<br/>groq / DuckDuckGo …"]
+        anthropic["Anthropic"]
     end
 
     user -->|"操作"| hermes
+    user -->|"操作"| ide
     hermes --> ccs
-    ccs --> ornith
-    ccs --> omni
-    ccs --> other
+    ccs -.->|"待確認"| ornith
+    ccs -.->|"待確認"| omni
+    ccs -.->|"待確認"| other
+    ccs -->|"切換 Claude Code 供應商"| ide
+
+    ornith -.->|"Ollama 會自動連"| ollamacom
+    omni -->|"best-free 會挑"| cloud
+    ide --> anthropic
