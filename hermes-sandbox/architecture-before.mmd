@@ -3,7 +3,7 @@ config:
   layout: elk
 ---
 %% 加入沙盒之前的 AI 系統架構（Ubuntu）
-%% 實線 = 已確認｜虛線 = 待你確認
+%% 實線 = 已確認｜虛線 = 推測或尚未確認
 flowchart LR
     user(["👤 你"])
 
@@ -33,10 +33,10 @@ flowchart LR
     user -->|"操作"| hermes
     user -->|"操作"| ide
     hermes --> ccs
-    ccs -.->|"待確認"| ollama
-    ccs -.->|"待確認"| poly
-    ccs -.->|"待確認"| omni
-    ccs -.->|"待確認"| other
+    ccs --> ollama
+    ccs --> poly
+    ccs --> omni
+    ccs --> other
 
     ollama -->|"跑"| ornith
     poly -.->|"應該也跑"| ornith
