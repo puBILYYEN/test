@@ -3,37 +3,22 @@ config:
   layout: elk
 ---
 %% 加入沙盒之前的 AI 系統架構（Ubuntu）
-%% 實線 = 確定的連線　虛線 = 我推測的，待你確認
+%% 你 → Hermes → CC Switch → 各個模型
+%% 右邊「模型」裡面的清單是我推測的，待你確認
 flowchart LR
     user(["👤 你"])
+    hermes["🤖 Hermes Agent"]
+    ccs["🎚️ CC Switch<br/>（開關）"]
 
-    subgraph host["🖥️ Ubuntu 主機"]
+    subgraph models["模型（待確認）"]
         direction TB
-        ccs["🎚️ CC Switch<br/>切換供應商的開關"]
-        ide["Antigravity IDE<br/>+ Claude Code"]
-        hermes["🤖 Hermes Agent<br/>~/.hermes/config.yaml"]
+        ornith["ORNITH 1.5<br/>（Ollama）"]
         omni["OmniRoute<br/>auto/best-free"]
-        ollama["Ollama"]
-        model[("ORNITH 1.5")]
+        other["其他模型"]
     end
 
-    subgraph internet["🌐 網際網路"]
-        ollamacom["ollama.com"]
-        cloud["免費雲端模型<br/>groq / DuckDuckGo …"]
-        anthropic["Anthropic<br/>（Claude Code 用）"]
-    end
-
-    user --> ccs
-    user --> ide
-    user --> hermes
-
-    ccs -->|"切換 Hermes 供應商"| hermes
-    ccs -->|"切換 Claude Code 供應商"| ide
-
-    hermes -.->|"待確認"| omni
-    omni -.->|"待確認"| ollama
-    ollama --> model
-
-    ide --> anthropic
-    omni --> cloud
-    ollama --> ollamacom
+    user -->|"操作"| hermes
+    hermes --> ccs
+    ccs --> ornith
+    ccs --> omni
+    ccs --> other
