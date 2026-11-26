@@ -1,0 +1,75 @@
+---
+config:
+  layout: elk
+  elk:
+    nodePlacementStrategy: BRANDES_KOEPF
+---
+%% 我目前的 AI 系統架構（Ubuntu）
+%% 圖例：綠色 = 已放進 sandbox 並實測｜橘色 = 還沒放進 sandbox｜紅色 = 對外出口｜灰色虛線 = 規劃中
+%% 實線箭頭 = 目前的資料流｜虛線箭頭 = 規劃中 / 尚未封鎖｜--x = 已擋住
+flowchart LR
+    user(["👤 你"])
+
+    subgraph host["🖥️ Ubuntu 主機（主機本身有網路）"]
+        direction TB
+        ide["Antigravity IDE + Claude Code<br/>在 sandbox 外，權限跟你一樣<br/>sudo / 刪檔需要你核准"]
+        fw{{"第 3 級：主機防火牆<br/>DOCKER-USER 擋往外轉送<br/>INPUT 擋連主機（已實測）"}}
+        omni["OmniRoute（AI 路由閘道）<br/>auto/best-free<br/>⚠️ 還沒放進 sandbox"]
+        hostsvc["主機上的其他服務<br/>proxy / VPN / SSH"]
+
+        subgraph sbx["📦 hermes-sandbox（172.30.0.0/24）"]
+            direction TB
+            lv["第 1 級：internal 網路、無 NAT、IPv6 關閉<br/>第 2 級：降權、不掛 docker.sock"]
+            hermes["🤖 Hermes Agent（AI 代理人）<br/>終端機 / 檔案 / 記憶<br/>terminal.backend = local"]
+            data[("hermes-data/<br/>workspace/")]
+            llm["Ollama 推論伺服器<br/>OLLAMA_NO_CLOUD=1"]
+            model[("ORNITH 1.5<br/>模型權重")]
+        end
+
+        plan4["第 4 級（規劃中）<br/>Docker Sandboxes microVM<br/>獨立核心，包住整個 sandbox"]
+    end
+
+    subgraph internet["🌐 網際網路（要防的出口）"]
+        direction TB
+        cloudfree["免費雲端供應商<br/>groq / nvidia-nim / kiro / pollinations…"]
+        noauth["免金鑰雲端<br/>Cloudflare Playground / DuckDuckGo / Devin"]
+        ollamacom["ollama.com<br/>雲端模型清單 / 推薦"]
+        gateway["Telegram / Discord / 網頁搜尋"]
+    end
+
+    %% 使用者操作
+    user --> ide
+    user -->|"docker compose run --rm hermes"| hermes
+    ide -.->|"管理"| fw
+    fw -.-|"保護"| sbx
+    plan4 -.-|"未來包住"| sbx
+
+    %% 目前的資料流
+    hermes -->|"目前：直接連 http://llm:11434/v1"| llm
+    hermes --> data
+    llm --> model
+
+    %% 規劃中的 OmniRoute 路線
+    hermes -.->|"規劃：改經由 OmniRoute"| omni
+    omni -.->|"ollama-local/ornith<br/>預設被當成付費，best-free 不會選"| llm
+
+    %% 對外出口
+    omni -.->|"⚠️ 未封鎖：best-free 會挑雲端"| cloudfree
+    omni -.->|"⚠️ 未封鎖：啟動探測就是外連"| noauth
+    llm --x|"❌ 已擋（實測）"| ollamacom
+    hermes --x|"❌ 已擋（實測）"| gateway
+    hermes --x|"❌ 已擋（實測）"| hostsvc
+
+    classDef safe fill:#d4f4dd,stroke:#2e7d32,color:#1b3d20
+    classDef warn fill:#ffe5c2,stroke:#e65100,color:#5a2a00,stroke-width:2px
+    classDef danger fill:#ffd6d6,stroke:#c62828,color:#5c1010
+    classDef plan fill:#eeeeee,stroke:#757575,color:#333333,stroke-dasharray:5 5
+    classDef outside fill:#e3ecff,stroke:#1e4fbf,color:#0f2a66
+    classDef note fill:#ffffff,stroke:#2e7d32,color:#1b3d20,stroke-dasharray:3 3
+
+    class hermes,llm,model,data,fw safe
+    class omni warn
+    class cloudfree,noauth,ollamacom,gateway danger
+    class plan4 plan
+    class ide,hostsvc outside
+    class lv note
